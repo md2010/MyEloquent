@@ -1,7 +1,7 @@
 <?php
 
-include 'HasAttributes.php';
-include 'DBConnection.php';
+include_once 'Traits/HasAttributes.php';
+include_once 'Database/DBConnection.php';
 
 abstract class BaseModel
 {
@@ -16,13 +16,26 @@ abstract class BaseModel
     
     public function __construct (array $attributes = [])
     {   
-        $db = new DBConnection();
-        $this->connection = $db->getConnection();
+        $instance = DBConnection::getInstance();
+        $this->connection = $instance->getConnection();
         $this->setTable();
         $this->fill($attributes);
     }
 
-    abstract public function create(array $values = []);
+    public function create(array $values = []) 
+    {   
+        try {
+            $this->setKeyValue();
+            array_unshift($values, $this->keyValue);
+            $statement = $this->connection->prepare("INSERT INTO $this->table VALUES (?,?,?,?)");
+            $statement->execute($values);     
+            echo "row inserted";
+            echo "<br>";
+        } catch (PDO $e) 
+        {
+            echo "Error" . $e->getMessage();
+        } 
+    }
 
     public function setTable()
     {
@@ -59,7 +72,7 @@ abstract class BaseModel
 
     protected function setKeyValue()
     {
-        $this->keyValue = $this->connection->lastInsertId();
+        $this->keyValue = $this->connection->lastInsertId() + 1;
     }
 
     public function getKeyValue()
@@ -67,24 +80,28 @@ abstract class BaseModel
         return $this->keyValue;
     }
 
-    public function __get($key) 
+    public function __get($name) 
     {
-       if ($this->checkAttribute($key)) {
+        if (array_key_exists($name, $this->attributes)) {
+            return $this->attributes[$name];
+        }
+       /*if ($this->checkAttribute($key)) {
             try {
                 $sql = "SELECT $key FROM $this->table WHERE id = $this->keyValue";
                 $q = $this->connection->prepare($sql);
+                $q->setFetchMode(PDO::FETCH_CLASS, $this->table);
                 $q->execute();
-                echo $key .": ". $q->fetchColumn();
             } catch (PDO $e)
             {
                 echo $e;
             }
-       } 
+       } */
     }
 
-    public function __set($key, $value)
+    public function __set($name, $value)
     {
-        if ($this->checkAttribute($key)) {
+        $this->attributes[$name] = $value;
+        /*if ($this->checkAttribute($key)) {
             try {
                 $sql = "UPDATE $this->table SET $key = $value WHERE id = $this->keyValue";
                 $q = $this->connection->prepare($sql);
@@ -95,16 +112,18 @@ abstract class BaseModel
             {
                 echo $e;
             }
-        }
+        } */
+    }
+
+    public function __isset($name)
+    {
+        return isset($this->attributes[$name]);
     }
 
     protected function fill(array $attributes = [])
     {
-        foreach($attributes as $key => $value){
-            $this->setAttributes($key, $value);
-        }
+        $this->attributes = $attributes;
     }
 
 }
 
-?>

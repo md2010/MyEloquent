@@ -2,7 +2,8 @@
 
 class DBConnection 
 {
-    public $conn;
+    private static $instance = null;
+    private $conn;
     protected $servername = "localhost";
     protected $dbname = "db";
     protected $user = "root";
@@ -20,6 +21,14 @@ class DBConnection
         }
     }
 
+    public static function getInstance()
+    {
+        if(!self::$instance) {
+            self::$instance = new DBConnection();
+        }  
+        return self::$instance;
+    }
+
     public function getConnection()
     {
         return $this->conn;
@@ -27,4 +36,3 @@ class DBConnection
 
 }
 
-?>

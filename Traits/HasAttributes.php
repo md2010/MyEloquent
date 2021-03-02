@@ -9,7 +9,7 @@ trait HasAttributes
         return $attributes;
     }
 
-    public function setAttributes($key, $value)
+    public function setAttribute($key, $value)
     {
         if (! is_null($value) && array_key_exists($key, $this->attributes)) {
             $this->attributes[$key] = $value;
@@ -22,7 +22,7 @@ trait HasAttributes
         if (! $key) {
             return false;
         }
-        if (array_key_exists($key, $this->attributes)) {
+        if (in_array($key, $this->attributes)) {
             return true;
         }
         else 
@@ -32,10 +32,8 @@ trait HasAttributes
         }
     }
 
-    
-
 }
 
-?>
+
 
     
