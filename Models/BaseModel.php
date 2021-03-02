@@ -24,17 +24,63 @@ abstract class BaseModel
 
     public function create(array $values = []) 
     {   
-        try {
-            $this->setKeyValue();
-            array_unshift($values, $this->keyValue);
-            $statement = $this->connection->prepare("INSERT INTO $this->table VALUES (?,?,?,?)");
-            $statement->execute($values);     
-            echo "row inserted";
-            echo "<br>";
-        } catch (PDO $e) 
-        {
-            echo "Error" . $e->getMessage();
+        $this->setKeyValue();
+        array_unshift($values, $this->keyValue);
+        $this->attributes = array_combine($this->attributes,$values);
+    }
+
+    public function getByID($id)
+    {
+        $statement = $this->connection->prepare("SELECT * FROM $this->table WHERE id = ?");
+        $statement->execute([$id]);
+        $result = $statement->fetch(PDO::FETCH_ASSOC);
+        return $result; 
+    }
+
+    public function save() 
+    {
+        $id = 'id';
+        $values = array_values($this->attributes);
+        if (! $this->getByID($values[0])) {
+            try {
+                $questionMarks = $this->makePlaceholder($values);
+                $statement = $this->connection->prepare("INSERT INTO $this->table VALUES (".$questionMarks. ")");
+                $statement->execute($values);     
+                echo "row inserted";
+                echo "<br>";
+            } catch (PDO $e) 
+            {
+                echo "Error" . $e->getMessage();
+            }
+        } else { //update -> delete func just deletes from DB, values are still here
+            $this->delete($this->attributes[$id]);
+            $this->save();
         } 
+    }
+
+    public function delete($id)
+    {
+        $statement = $this->connection->prepare("DELETE FROM $this->table WHERE id = ?");
+        $statement->execute([$id]);
+    }
+
+    public function deletePermanently($id) //delete from DB and program
+    {
+        $statement = $this->connection->prepare("DELETE FROM $this->table WHERE id = ?");
+        $statement->execute([$id]);
+        $this->attributes = array(); 
+    }
+
+    private function makePlaceholder($values)
+    {
+        $str = null;
+        for($i = 0; $i < sizeof($values); $i++){
+            $str .= '?';
+            if ($i != sizeof($values) - 1)
+                $str .= ', ';
+        }
+        str_replace("'",'',$str);
+        return $str;
     }
 
     public function setTable()
@@ -84,35 +130,12 @@ abstract class BaseModel
     {
         if (array_key_exists($name, $this->attributes)) {
             return $this->attributes[$name];
-        }
-       /*if ($this->checkAttribute($key)) {
-            try {
-                $sql = "SELECT $key FROM $this->table WHERE id = $this->keyValue";
-                $q = $this->connection->prepare($sql);
-                $q->setFetchMode(PDO::FETCH_CLASS, $this->table);
-                $q->execute();
-            } catch (PDO $e)
-            {
-                echo $e;
-            }
-       } */
+        } 
     }
 
     public function __set($name, $value)
     {
         $this->attributes[$name] = $value;
-        /*if ($this->checkAttribute($key)) {
-            try {
-                $sql = "UPDATE $this->table SET $key = $value WHERE id = $this->keyValue";
-                $q = $this->connection->prepare($sql);
-                $q->execute();
-                echo $key ." is set to " .$value;
-                echo "<br>";
-            } catch (PDO $e)
-            {
-                echo $e;
-            }
-        } */
     }
 
     public function __isset($name)
@@ -122,6 +145,7 @@ abstract class BaseModel
 
     protected function fill(array $attributes = [])
     {
+        array_unshift($attributes, 'id');
         $this->attributes = $attributes;
     }
 
