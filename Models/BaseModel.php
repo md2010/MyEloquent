@@ -48,8 +48,7 @@ abstract class BaseModel
                 $statement->execute($values);     
                 echo "row inserted";
                 echo "<br>";
-            } catch (PDO $e) 
-            {
+            } catch (PDO $e) {
                 echo "Error" . $e->getMessage();
             }
         } else { 
@@ -72,14 +71,16 @@ abstract class BaseModel
         $keys = array_keys($this->attributes);
         $values = array_values($this->attributes);
          $sql = null;
-        for ($i = 0; $i < sizeof($this->attributes); $i++){
+        for ($i = 0; $i < sizeof($this->attributes); $i++) {
             $sql .= $keys[$i]. '=';
-            if (is_string($values[$i])) 
+            if (is_string($values[$i])) {
                 $sql .= '"'.$values[$i].'"';
-            else 
+            } else { 
                 $sql .= $values[$i];
-            if ($i != sizeof($values) - 1)
+            }
+            if ($i != sizeof($values) - 1) {
                 $sql .= ', ';
+            }
         } 
         return $sql;
     }
@@ -102,8 +103,9 @@ abstract class BaseModel
         $str = null;
         for($i = 0; $i < sizeof($values); $i++){
             $str .= '?';
-            if ($i != sizeof($values) - 1)
+            if ($i != sizeof($values) - 1) {
                 $str .= ', ';
+            }
         }
         str_replace("'",'',$str);
         return $str;
