@@ -52,10 +52,36 @@ abstract class BaseModel
             {
                 echo "Error" . $e->getMessage();
             }
-        } else { //update -> delete func just deletes from DB, values are still here
-            $this->delete($this->attributes[$id]);
-            $this->save();
+        } else { 
+            $this->update($id);
         } 
+    }
+
+    public function update($id) 
+    {
+        $sqlQuery = $this->columnsWithValues();
+        $statement = $this->connection->prepare("UPDATE $this->table SET $sqlQuery WHERE id = $id");
+        var_dump($statement);
+        $statement->execute();  
+    }
+
+    public function columnsWithValues()
+    {
+        // $query = http_build_query($this->attributes); //ne ostavlja navodnike kod stringa
+        // $sqlQuery = str_replace("&", ', ',$query);
+        $keys = array_keys($this->attributes);
+        $values = array_values($this->attributes);
+         $sql = null;
+        for ($i = 0; $i < sizeof($this->attributes); $i++){
+            $sql .= $keys[$i]. '=';
+            if (is_string($values[$i])) 
+                $sql .= '"'.$values[$i].'"';
+            else 
+                $sql .= $values[$i];
+            if ($i != sizeof($values) - 1)
+                $sql .= ', ';
+        } 
+        return $sql;
     }
 
     public function delete($id)
