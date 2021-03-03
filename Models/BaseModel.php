@@ -70,7 +70,7 @@ abstract class BaseModel
         // $sqlQuery = str_replace("&", ', ',$query);
         $keys = array_keys($this->attributes);
         $values = array_values($this->attributes);
-         $sql = null;
+        $sql = null;
         for ($i = 0; $i < sizeof($this->attributes); $i++) {
             $sql .= $keys[$i]. '=';
             if (is_string($values[$i])) {
