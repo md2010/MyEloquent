@@ -101,7 +101,7 @@ abstract class BaseModel
     private function makePlaceholder($values)
     {
         $str = null;
-        for($i = 0; $i < sizeof($values); $i++){
+        for($i = 0; $i < sizeof($values); $i++) {
             $str .= '?';
             if ($i != sizeof($values) - 1) {
                 $str .= ', ';
